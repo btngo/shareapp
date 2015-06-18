@@ -5,3 +5,13 @@
     -o-background-size: cover;
     background-size: cover;
 }
+
+ion-item.item, ion-item.item a {
+  background-color: lawngreen !important;
+  box-shadow: inset 0px 0px 0px 1px red;
+}
+
+ion-item.item:hover a {
+  background-color: mediumspringgreen !important;
+  box-shadow: inset 0px 0px 0px 1px yellow;
+}

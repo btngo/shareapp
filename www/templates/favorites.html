@@ -1,5 +1,13 @@
-<ion-view view-title="favorites">
+<ion-view view-title="favorites" class = 'background'>
   <ion-content>
-    <h1>favorites</h1>
+    <ion-list>
+      <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="location in locations" type="item-text-wrap" href="#/app/favorites">
+        <h2>{{location.name}}</h2>
+        <h2>{{location.description}}</h2>
+        <h2>{{location.email}}</h2>
+        <h2>{{location.telephone}}</h2>
+        <h2>{{location.city}}</h2>
+      </ion-item>
+    </ion-list>
   </ion-content>
 </ion-view>

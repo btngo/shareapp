@@ -32,7 +32,8 @@ angular.module('starter', [
         url: "/favorites",
         views: {
           'menuContent': {
-            templateUrl: "templates/favorites.html"
+            templateUrl: "templates/favorites.html",
+            controller: 'LocationCtrl'
           }
         }
       })
@@ -70,6 +71,7 @@ angular.module('starter', [
     $urlRouterProvider.otherwise('/app/agenda');
   })
   .config(function(RestangularProvider) {
+    RestangularProvider.setBaseUrl('http://dqlenguyen.myds.me:8000/');
     RestangularProvider.setFullResponse(true);
   })
   .run(function($ionicPlatform) {
