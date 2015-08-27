@@ -1,5 +1,6 @@
 <ion-view view-title="favorites" class = 'background'>
   <ion-content>
+    <ion-refresher on-refresh="getLocations()"></ion-refresher>
     <ion-list>
       <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="location in locations" type="item-text-wrap" href="#/app/favorites">
         <h2>{{location.name}}</h2>

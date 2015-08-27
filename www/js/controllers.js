@@ -1,6 +1,6 @@
 angular.module('starter.controllers', [])
 
-  .controller('AppCtrl', function($scope, $ionicModal, $timeout) {
+  .controller('AppCtrl', function($scope, $rootScope, $ionicModal, $http, loginService, $location) {
 
     // With the new view caching in Ionic, Controllers are only called
     // when they are recreated or on app start, instead of every page change.
@@ -29,40 +29,119 @@ angular.module('starter.controllers', [])
       $scope.modal.show();
     };
 
+    $scope.createNewAccount = function() {
+      $scope.modal.hide();
+      $ionicModal.fromTemplateUrl('templates/createAccount.html', {
+        scope: $scope
+      }).then(function(modal) {
+        $scope.modalAccount = modal;
+        $rootScope.$broadcast('create Account');
+      });
+    };
+    $scope.closeRegisterForm = function() {
+      $scope.modalAccount.hide();
+    };
+
+    $scope.$on('create Account', function() {
+      $scope.modalAccount.show();
+    });
+
     // Perform the login action when the user submits the login form
     $scope.doLogin = function() {
-      console.log('Doing login', $scope.loginData);
+      var req = {
+        method: 'POST',
+        url: '/api/api-token-auth/',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        data: 'username=' + $scope.loginData.username + '&password=' + $scope.loginData.password
+      };
+      $http(req).success(function(data, status) {
+        if(status === 200 ){
+          loginService.saveToken(data.token);
+          $scope.token = data.token;
+          console.log(data);
+        }
+        $rootScope.$broadcast('loggedIn')
+      }).error(function() {
+        console.log('error login');
+      });
+    };
 
-      // Simulate a login delay. Remove this and replace with your login
-      // code if using a login system
-      $timeout(function() {
-        $scope.closeLogin();
-      }, 1000);
+    $scope.createAccount = function(){
+
+    };
+
+    $scope.doLogin = function() {
+      var req = {
+        method: 'POST',
+        url: '/api/api-token-auth/',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        data: 'username=' + $scope.loginData.username + '&password=' + $scope.loginData.password
+      };
+      $http(req).success(function(data, status) {
+        if(status === 200 ){
+          loginService.saveToken(data.token);
+          $scope.token = data.token;
+          console.log(data);
+        }
+        $rootScope.$broadcast('loggedIn')
+      }).error(function() {
+        console.log('error login');
+      });
     };
   })
 
-  .controller('AgendaCtrl',function($scope, $ionicModal, agendaService, locationFavoriteService, $http) {
+  .controller('AgendaCtrl',function($scope, $rootScope, $ionicModal, agendaService, locationFavoriteService, $http, $timeout, loginService) {
 
-    $scope.favorites = JSON.parse(window.localStorage['locations']) || [];
-    console.log('locations are:', $scope.favorites[0]);
+    $ionicModal.fromTemplateUrl('templates/login.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.modal1 = modal;
+    });
+
     $ionicModal.fromTemplateUrl('templates/addNewEvent.html', {
       scope: $scope
     }).then(function(modal) {
-      $scope.modal = modal;
+      $scope.modal2 = modal;
     });
 
+    $timeout( function() {
+      $scope.token = loginService.getToken();
+      if (!$scope.token){
+        $scope.modal1.show();
+      }
+    }, 500);
+
+    $scope.$on('loggedIn', function(){
+      $scope.modal1.hide();
+      $scope.getEvents();
+    });
+    $scope.closeLogin = function() {
+      $scope.modal1.hide();
+    };
+
+    $scope.closeEventModal = function() {
+      $scope.modal2.hide();
+    };
+
     $scope.addNewEvent = function() {
-      $scope.modal.show();
+      $scope.modal2.show();
     };
 
     $scope.createNewEvent = function(){
+      $scope.token = loginService.getToken();
       var req = {
         method: 'POST',
         url: '/api/events/',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Token ' + $scope.token
         },
-        data: {"name":"Event 4", "location":"1", "owner":"0634124981", "event_date":"2015-05-17T00:00"}
+        data: {"name":"Event 4", "location":"1", "owner":"0634124986", "event_date":"2015-09-17T00:00"}
       };
 
       $http(req).success(function(data, status) {
@@ -74,6 +153,7 @@ angular.module('starter.controllers', [])
         console.log('error create events');
       });
     };
+
     Number.prototype.toHHMMSS = function () {
       var hours   = Math.floor(this / 3600);
       var minutes = Math.floor((this - (hours * 3600)) / 60);
@@ -112,26 +192,29 @@ angular.module('starter.controllers', [])
       }
     };
 
-    var req = {
-      method: 'GET',
-      url: '/api/events/',
-      headers: {
-        'Accept': 'application/json'
-      }
-    };
-
-    $http(req).success(function(data, status, headers, config) {
-      console.log('success get events');
-      console.log(' events', data);
-      $scope.events = data;
-      console.log(data);
-      agendaService.setList(data);
-    }).error(function(data, status, headers, config) {
+    $scope.getEvents = function() {
+      $scope.token = loginService.getToken();
+      var req = {
+        method: 'GET',
+        url: '/api/events/',
+        headers: {
+          'Authorization': 'Token ' + $scope.token
+        }
+      };
+      $http(req).success(function(data, status, headers, config) {
+        console.log('success get events');
+        console.log(' events', data);
+        $scope.events = data;
+        console.log(data);
+        agendaService.setList(data);
+      }).error(function(data, status, headers, config) {
         console.log('error get events');
         console.log(' events', data);
         console.log(' events', status);
         console.log(' events', headers);
       });
+    }
+
 
   })
 
@@ -141,28 +224,33 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('LocationCtrl',['$scope', 'locationService', 'locationFavoriteService', '$http', function($scope, locationService, locationFavoriteService, $http) {
+  .controller('LocationCtrl', function($scope, locationService, loginService, locationFavoriteService, $http) {
+    $scope.getLocations = function() {
+      $scope.token = loginService.getToken();
+      var req = {
+        method: 'GET',
+        url: '/api/locations/',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Token ' + $scope.token
+        }
+      };
 
-    var req = {
-      method: 'GET',
-      url: '/api/locations/',
-      headers: {
-        'Accept': 'application/json'
-      }
-    };
-
-    $http(req).success(function(data) {
-      console.log('success get locations');
-      $scope.locations = data;
-      console.log(data);
-      window.localStorage['locations'] = JSON.stringify(data);
-      locationService.setList(data);
-      locationFavoriteService.setList(data);
-    }).error(function() {
+      $http(req).success(function(data) {
+        console.log('success get locations');
+        $scope.locations = data;
+        console.log(data);
+        window.localStorage['locations'] = JSON.stringify(data);
+        locationService.setList(data);
+        locationFavoriteService.setList(data);
+      }).error(function() {
         console.log('error get locations');
       });
-
-  }])
+    };
+    $scope.$on('loggedIn', function(){
+      $scope.getLocations();
+    });
+  })
 
   .controller('LocationDetailCtrl', function($scope, locationService, $stateParams) {
     $scope.location = locationService.getLocation($stateParams.eventId);
@@ -217,6 +305,29 @@ angular.module('starter.controllers', [])
       getList: getList,
       setList: setList,
       getLocation: getLocation
+    }
+  })
+  .factory('loginService', function() {
+    var token;
+    var loginData;
+
+    function saveLogin(user, pass) {
+      loginData = {
+        username: user,
+        password: pass
+      }
+    }
+    function saveToken(t){
+      token = t;
+    }
+
+    function getToken(){
+      return token;
+    }
+    return {
+      saveToken: saveToken,
+      getToken: getToken,
+      saveLogin: saveLogin
     }
   })
 

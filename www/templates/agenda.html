@@ -4,6 +4,7 @@
     </button>
   </ion-nav-buttons>
   <ion-content>
+    <ion-refresher on-refresh="getEvents()"></ion-refresher>
     <ion-list>
       <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="event in events" type="item-text-wrap" href="#/app/agenda/{{event.event_id}}">
         <h2>{{event.name}}</h2>

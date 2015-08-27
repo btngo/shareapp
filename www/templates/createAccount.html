@@ -1,12 +1,12 @@
 <ion-modal-view>
   <ion-header-bar>
-    <h1 class="title">Login</h1>
+    <h1 class="title">Create new account</h1>
     <div class="buttons">
-      <button class="button button-clear" ng-click="closeLogin()">Close</button>
+      <button class="button button-clear" ng-click="closeRegisterForm()">Close</button>
     </div>
   </ion-header-bar>
   <ion-content>
-    <form ng-submit="doLogin()">
+    <form ng-submit="createAccount()">
       <div class="list">
         <label class="item item-input">
           <span class="input-label">Username</span>
@@ -17,13 +17,9 @@
           <input type="password" ng-model="loginData.password">
         </label>
         <label class="item">
-          <button class="button button-block button-positive" type="submit">Log in</button>
+          <button class="button button-block button-positive" type="submit">Create account</button>
         </label>
       </div>
     </form>
-
-    <div class="wrapper">
-      <button class="button button-block" ng-click="createNewAccount()">No account? click here</button>
-    </div>
   </ion-content>
 </ion-modal-view>
