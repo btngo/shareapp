@@ -1,11 +1,18 @@
-<ion-view view-title="Agenda"  class = 'background'>
+<ion-view view-title="AGENDA"  class = 'background'>
   <ion-content>
     <ion-list>
       <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="event in events" type="item-text-wrap" href="#/app/agenda/{{event.event_id}}">
-        <h2>{{event.name}}</h2>
-        <h2>{{event.owner.firstname}}</h2>
-        <h2>{{event.event_date}}</h2>
-        <h2>{{event.location.name}}</h2>
+        <div class="game">
+        	<div class="float">
+        	<img src="../img/field.png"/> 
+        	</div>
+        	<div class="float">
+        	<p class="Name"><b>{{event.name}}</b></p>
+        	<p>{{event.event_date}}</p>
+        	<p>{{event.location.name}}</p>
+        	<p>{{event.owner.firstname}}</p>
+        	</div>
+        </div>
       </ion-item>
     </ion-list>
   </ion-content>
