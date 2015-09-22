@@ -17,6 +17,7 @@
     "cordova-plugin-device",
     "cordova-plugin-console",
     "cordova-plugin-whitelist",
+    "cordova-plugin-contacts",
     "cordova-plugin-datepicker",
     "cordova-plugin-splashscreen",
     "com.ionic.keyboard"

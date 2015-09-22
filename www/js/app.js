@@ -8,6 +8,7 @@ angular.module('starter', [
   'ionic',
   'restangular',
   'starter.controllers',
+  'ionic-utils',
   'ionic-datepicker',
   'ionic-timepicker'
 ])
@@ -25,7 +26,8 @@ angular.module('starter', [
         url: "/utils",
         views: {
           'menuContent': {
-            templateUrl: "templates/utils.html"
+            templateUrl: "templates/utils.html",
+            controller: 'ContactCtrl'
           }
         }
       })

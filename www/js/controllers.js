@@ -1,6 +1,6 @@
 angular.module('starter.controllers', [])
 
-  .controller('AppCtrl', function($scope, $rootScope, $ionicModal, $http, loginService, $location) {
+  .controller('AppCtrl', function($scope, $rootScope, $ionicModal, $http, $localStorage, $ionicPopup) {
 
     // With the new view caching in Ionic, Controllers are only called
     // when they are recreated or on app start, instead of every page change.
@@ -16,21 +16,21 @@ angular.module('starter.controllers', [])
     $ionicModal.fromTemplateUrl('templates/login.html', {
       scope: $scope
     }).then(function(modal) {
-      $scope.modal = modal;
+      $scope.modal1 = modal;
     });
 
     // Triggered in the login modal to close it
     $scope.closeLogin = function() {
-      $scope.modal.hide();
+      $scope.modal1.hide();
     };
 
     // Open the login modal
     $scope.login = function() {
-      $scope.modal.show();
+      $scope.modal1.show();
     };
 
     $scope.createNewAccount = function() {
-      $scope.modal.hide();
+      $scope.modal1.hide();
       $ionicModal.fromTemplateUrl('templates/createAccount.html', {
         scope: $scope
       }).then(function(modal) {
@@ -48,53 +48,79 @@ angular.module('starter.controllers', [])
 
     // Perform the login action when the user submits the login form
     $scope.doLogin = function() {
-      var req = {
-        method: 'POST',
-        url: '/api/api-token-auth/',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        data: 'username=' + $scope.loginData.username + '&password=' + $scope.loginData.password
-      };
-      $http(req).success(function(data, status) {
+      $http.post('/api/api-token-auth/', {username: $scope.loginData.username, password: $scope.loginData.password}).success(function(data, status) {
         if(status === 200 ){
-          loginService.saveToken(data.token);
+          console.log('success login');
+          $localStorage.set('username', $scope.loginData.username);
+          $localStorage.set('password', $scope.loginData.password);
+          $localStorage.set('token', data.token);
           $scope.token = data.token;
-          console.log(data);
+          $scope.modal1.hide();
+          $rootScope.$broadcast('loggedIn');
         }
-        $rootScope.$broadcast('loggedIn')
-      }).error(function() {
-        console.log('error login');
-      });
+      }).error(function(data) {
+        $ionicPopup.alert({
+          title: 'Login failed! ',
+          template: 'Please check your credentials!'
+        });
+      })
     };
 
     $scope.createAccount = function(){
 
     };
-
-    $scope.doLogin = function() {
-      var req = {
-        method: 'POST',
-        url: '/api/api-token-auth/',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        data: 'username=' + $scope.loginData.username + '&password=' + $scope.loginData.password
-      };
-      $http(req).success(function(data, status) {
-        if(status === 200 ){
-          loginService.saveToken(data.token);
-          $scope.token = data.token;
-          console.log(data);
-        }
-        $rootScope.$broadcast('loggedIn')
-      }).error(function() {
-        console.log('error login');
-      });
-    };
   })
 
-  .controller('AgendaCtrl',function($scope, $rootScope, $ionicModal, agendaService, locationFavoriteService, $http, $timeout, loginService) {
+  .controller('AgendaCtrl',function($scope, $rootScope, $ionicModal, agendaService, locationFavoriteService, $http, $timeout, $localStorage) {
+    $scope.event = {
+      name: '',
+      location: ''
+    };
+    $scope.timePickerObject = {
+      inputEpochTime: ((new Date()).getHours() * 60 * 60),
+      step: 15,
+      format: 12,
+      titleLabel: '12-hour Format',
+      setLabel: 'Set',
+      closeLabel: 'Close',
+      setButtonType: 'button-positive',
+      closeButtonType: 'button-stable',
+      callback: function (val) {
+        timePickerCallback(val);
+      }
+    };
+    function timePickerCallback(val) {
+      if (typeof (val) === 'undefined') {
+        console.log('Time not selected');
+      } else {
+        $scope.timePickerObject.inputEpochTime = val;
+      }
+    }
+
+    $scope.datepickerObject = {
+      titleLabel: 'Title',
+      todayLabel: 'Today',
+      closeLabel: 'Close',
+      setLabel: 'Set',
+      setButtonType : 'button-assertive',
+      todayButtonType : 'button-assertive',
+      closeButtonType : 'button-assertive',
+      inputDate: new Date(),
+      templateType: 'popup',
+      modalHeaderColor: 'bar-positive',
+      modalFooterColor: 'bar-positive',
+      callback: function (val) {
+        datePickerCallback(val);
+      }
+    };
+
+    var datePickerCallback = function (val) {
+      if (typeof(val) === 'undefined') {
+        console.log('No date selected');
+      } else {
+        $scope.datepickerObject.inputDate = val;
+      }
+    };
 
     $ionicModal.fromTemplateUrl('templates/login.html', {
       scope: $scope,
@@ -104,20 +130,23 @@ angular.module('starter.controllers', [])
     });
 
     $ionicModal.fromTemplateUrl('templates/addNewEvent.html', {
-      scope: $scope
+      scope: $scope,
+      animation: 'slide-in-up'
     }).then(function(modal) {
       $scope.modal2 = modal;
     });
 
     $timeout( function() {
-      $scope.token = loginService.getToken();
-      if (!$scope.token){
+      if ($localStorage.get('token', '') === ''){
         $scope.modal1.show();
       }
     }, 500);
 
     $scope.$on('loggedIn', function(){
       $scope.modal1.hide();
+      $scope.getEvents();
+    });
+    $scope.$on('Event created', function(){
       $scope.getEvents();
     });
     $scope.closeLogin = function() {
@@ -129,11 +158,22 @@ angular.module('starter.controllers', [])
     };
 
     $scope.addNewEvent = function() {
+      $scope.event.name = '';
+      $scope.event.location = '';
       $scope.modal2.show();
     };
 
+    function geteventDate () {
+      var epocheTime = $scope.timePickerObject.inputEpochTime;
+      $scope.datepickerObject.inputDate.setHours(parseInt(epocheTime / 3600));
+      $scope.datepickerObject.inputDate.setMinutes((epocheTime / 60) % 60);
+      return $scope.datepickerObject.inputDate.toJSON();
+    }
+
     $scope.createNewEvent = function(){
-      $scope.token = loginService.getToken();
+      $scope.token = $localStorage.get('token', '');
+
+      console.log($scope.eventName, $scope.eventLocation );
       var req = {
         method: 'POST',
         url: '/api/events/',
@@ -141,11 +181,13 @@ angular.module('starter.controllers', [])
           'Content-Type': 'application/json',
           'Authorization': 'Token ' + $scope.token
         },
-        data: {"name":"Event 4", "location":"1", "owner":"0634124986", "event_date":"2015-09-17T00:00"}
+        data: {"name": $scope.event.name , "location": $scope.event.location , "owner":"0634124986", "event_date":geteventDate()}
       };
 
       $http(req).success(function(data, status) {
         if(status === 201 ){
+          $scope.closeEventModal();
+          $scope.$broadcast('Event created');
           console.log('success create events');
           console.log(' events', data);
         }
@@ -193,7 +235,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.getEvents = function() {
-      $scope.token = loginService.getToken();
+      $scope.token = $localStorage.get('token', '');
       var req = {
         method: 'GET',
         url: '/api/events/',
@@ -202,31 +244,80 @@ angular.module('starter.controllers', [])
         }
       };
       $http(req).success(function(data, status, headers, config) {
-        console.log('success get events');
-        console.log(' events', data);
         $scope.events = data;
-        console.log(data);
         agendaService.setList(data);
       }).error(function(data, status, headers, config) {
-        console.log('error get events');
-        console.log(' events', data);
-        console.log(' events', status);
-        console.log(' events', headers);
-      });
+      }).finally(function() {
+        $scope.$broadcast('scroll.refreshComplete');
+      });;
     }
 
 
   })
 
+  .directive('standardTimeMeridian', function() {
+    return {
+      restrict: 'AE',
+      replace: true,
+      scope: {
+        etime: '=etime'
+      },
+      template: "<strong>{{stime}}</strong>",
+      link: function(scope, elem, attrs) {
 
+        scope.stime = epochParser(scope.etime, 'time');
+
+        function prependZero(param) {
+          if (String(param).length < 2) {
+            return "0" + String(param);
+          }
+          return param;
+        }
+
+        function epochParser(val, opType) {
+          if (val === null) {
+            return "00:00";
+          } else {
+            var meridian = ['AM', 'PM'];
+
+            if (opType === 'time') {
+              var hours = parseInt(val / 3600);
+              var minutes = (val / 60) % 60;
+              var hoursRes = hours > 12 ? (hours - 12) : hours;
+
+              var currentMeridian = meridian[parseInt(hours / 12)];
+
+              return (prependZero(hoursRes) + ":" + prependZero(minutes) + " " + currentMeridian);
+            }
+          }
+        }
+
+        scope.$watch('etime', function(newValue, oldValue) {
+          scope.stime = epochParser(scope.etime, 'time');
+        });
+
+      }
+    };
+  })
   .controller('AgendaDetailCtrl', function($scope, agendaService, $stateParams) {
     $scope.event = agendaService.getEvent($stateParams.eventId);
 
   })
 
-  .controller('LocationCtrl', function($scope, locationService, loginService, locationFavoriteService, $http) {
+  .controller('ContactCtrl', function($scope, agendaService, $stateParams) {
+    $scope.getAllContacts = function() {
+      $cordovaContacts.find().then(function(allContacts) {
+        $scope.contacts = allContacts;
+      });
+    };
+    document.addEventListener("deviceready", function () {
+      $scope.getAllContacts();
+    }, false);
+  })
+
+  .controller('LocationCtrl', function($scope, locationService, $localStorage, locationFavoriteService, $http) {
     $scope.getLocations = function() {
-      $scope.token = loginService.getToken();
+      $scope.token = $localStorage.get('token', '');
       var req = {
         method: 'GET',
         url: '/api/locations/',
@@ -237,9 +328,7 @@ angular.module('starter.controllers', [])
       };
 
       $http(req).success(function(data) {
-        console.log('success get locations');
         $scope.locations = data;
-        console.log(data);
         window.localStorage['locations'] = JSON.stringify(data);
         locationService.setList(data);
         locationFavoriteService.setList(data);
@@ -274,7 +363,6 @@ angular.module('starter.controllers', [])
         var bool = Number(location.location_id) === Number(locationId);
         return bool;
       });
-      console.log('event filtered', filteredLocation.length);
       return filteredLocation[0];
     }
     return {
@@ -298,36 +386,12 @@ angular.module('starter.controllers', [])
         var bool = Number(location.location_id) === Number(locationId);
         return bool;
       });
-      console.log('event filtered', filteredLocation.length);
       return filteredLocation[0];
     }
     return {
       getList: getList,
       setList: setList,
       getLocation: getLocation
-    }
-  })
-  .factory('loginService', function() {
-    var token;
-    var loginData;
-
-    function saveLogin(user, pass) {
-      loginData = {
-        username: user,
-        password: pass
-      }
-    }
-    function saveToken(t){
-      token = t;
-    }
-
-    function getToken(){
-      return token;
-    }
-    return {
-      saveToken: saveToken,
-      getToken: getToken,
-      saveLogin: saveLogin
     }
   })
 
@@ -341,16 +405,10 @@ angular.module('starter.controllers', [])
       events = eventList;
     }
     function getEvent(eventId){
-      console.log('eventId', eventId);
       var filteredEvent =  events.filter(function (event) {
-        console.log('eventId', event.event_id);
-        console.log('event name', event.name);
-        console.log('event owner', event.owner.firstname);
         var bool = Number(event.event_id) === Number(eventId);
-        console.log('event',event.event_id, 'eventId', eventId, bool);
         return bool;
       });
-      console.log('event filtered', filteredEvent.length);
       return filteredEvent[0];
     }
     return {

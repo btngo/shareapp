@@ -1,5 +1,9 @@
-<ion-view view-title="Utils">
+<ion-view view-title="Contacts">
   <ion-content>
-    <h1>Utils</h1>
+    <ion-list>
+      <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="contact in contacts" type="item-text-wrap" >
+        <h2>{{contact.name}}</h2>
+      </ion-item>
+    </ion-list>
   </ion-content>
 </ion-view>
