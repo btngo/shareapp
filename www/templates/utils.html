@@ -2,7 +2,9 @@
   <ion-content>
     <ion-list>
       <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="contact in contacts" type="item-text-wrap" >
-        <h2>{{contact.name}}</h2>
+        <h2>{{contact.id}}</h2>
+        <h2>{{contact.emails[0].value}}</h2>
+        <h2>{{contact.phoneNumbers[0].value}}</h2>
       </ion-item>
     </ion-list>
   </ion-content>

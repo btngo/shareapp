@@ -48,7 +48,7 @@ angular.module('starter.controllers', [])
 
     // Perform the login action when the user submits the login form
     $scope.doLogin = function() {
-      $http.post('/api/api-token-auth/', {username: $scope.loginData.username, password: $scope.loginData.password})
+      $http.post('http://dqlenguyen.myds.me:8000/api-token-auth/', {username: $scope.loginData.username, password: $scope.loginData.password})
         .then(function(response) {
           if(response.status === 200 ){
             console.log('success login');
@@ -178,7 +178,7 @@ angular.module('starter.controllers', [])
       console.log($scope.eventName, $scope.eventLocation );
       var req = {
         method: 'POST',
-        url: '/api/events/',
+        url: 'http://dqlenguyen.myds.me:8000/events/',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Token ' + $scope.token
@@ -240,7 +240,7 @@ angular.module('starter.controllers', [])
       $scope.token = $localStorage.get('token', '');
       var req = {
         method: 'GET',
-        url: '/api/events/',
+        url: 'http://dqlenguyen.myds.me:8000/events/',
         headers: {
           'Authorization': 'Token ' + $scope.token
         }
@@ -251,7 +251,7 @@ angular.module('starter.controllers', [])
       }).error(function(data, status, headers, config) {
       }).finally(function() {
         $scope.$broadcast('scroll.refreshComplete');
-      });;
+      });
     }
 
 
@@ -304,25 +304,37 @@ angular.module('starter.controllers', [])
   .controller('AgendaDetailCtrl', function($scope, agendaService, $stateParams) {
     $scope.event = agendaService.getEvent($stateParams.eventId);
 
-  })
+    })
 
-  .controller('ContactCtrl', function($scope, $ionicPlatform, $cordovaContacts) {
-    $scope.getAllContacts = function() {
-      $cordovaContacts.find().then(function(allContacts) {
-        $scope.contacts = allContacts;
-      });
-    };
-    $ionicPlatform.ready(function() {
-      $scope.getAllContacts();
-    }, false);
-  })
+    .controller('ContactCtrl', function($scope, $ionicPlatform, $cordovaContacts) {
+
+      $scope.getAllContacts = function() {
+        var options = new ContactFindOptions();
+        options.multiple = true;
+        options.filter = '';
+        if (ionic.Platform.isAndroid()) {
+          options.hasPhoneNumber = true;         //hasPhoneNumber only works for android.
+          options.fields = ['name.formatted', 'phoneNumbers'];
+        };
+        $cordovaContacts.find(options).then(function(allContacts) {
+          console.log(allContacts);
+
+          $scope.contacts = allContacts.filter(function (value) {
+            return (value.phoneNumbers !== null) || (value.emails !== null);
+          });
+        });
+      };
+      $ionicPlatform.ready(function() {
+        $scope.getAllContacts();
+      }, false);
+    })
 
   .controller('LocationCtrl', function($scope, locationService, $localStorage, locationFavoriteService, $http) {
     $scope.getLocations = function() {
       $scope.token = $localStorage.get('token', '');
       var req = {
         method: 'GET',
-        url: '/api/locations/',
+        url: 'http://dqlenguyen.myds.me:8000/locations/',
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Token ' + $scope.token
@@ -336,6 +348,8 @@ angular.module('starter.controllers', [])
         locationFavoriteService.setList(data);
       }).error(function() {
         console.log('error get locations');
+      }).finally(function() {
+        $scope.$broadcast('scroll.refreshComplete');
       });
     };
     $scope.$on('loggedIn', function(){

@@ -19,7 +19,8 @@
     "cordova-plugin-contacts",
     "cordova-plugin-datepicker",
     "cordova-plugin-splashscreen",
-    "com.ionic.keyboard"
+    "com.ionic.keyboard",
+    "org.apache.cordova.contacts"
   ],
   "scripts": {
     "postinstall": "./node_modules/.bin/bower install --allow-root"
