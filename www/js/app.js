@@ -9,6 +9,7 @@ angular.module('starter', [
   'restangular',
   'starter.controllers',
   'ionic-utils',
+  'ngCordova',
   'ionic-datepicker',
   'ionic-timepicker'
 ])

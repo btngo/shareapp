@@ -48,22 +48,24 @@ angular.module('starter.controllers', [])
 
     // Perform the login action when the user submits the login form
     $scope.doLogin = function() {
-      $http.post('/api/api-token-auth/', {username: $scope.loginData.username, password: $scope.loginData.password}).success(function(data, status) {
-        if(status === 200 ){
-          console.log('success login');
-          $localStorage.set('username', $scope.loginData.username);
-          $localStorage.set('password', $scope.loginData.password);
-          $localStorage.set('token', data.token);
-          $scope.token = data.token;
-          $scope.modal1.hide();
-          $rootScope.$broadcast('loggedIn');
-        }
-      }).error(function(data) {
-        $ionicPopup.alert({
-          title: 'Login failed! ',
-          template: 'Please check your credentials!'
-        });
-      })
+      $http.post('/api/api-token-auth/', {username: $scope.loginData.username, password: $scope.loginData.password})
+        .then(function(response) {
+          if(response.status === 200 ){
+            console.log('success login');
+            $localStorage.set('username', $scope.loginData.username);
+            $localStorage.set('password', $scope.loginData.password);
+            $localStorage.set('token', response.data.token);
+            $scope.token = response.data.token;
+            $scope.modal1.hide();
+            $rootScope.$broadcast('loggedIn');
+          }
+        }, function(response) {
+          console.log('error login', response.config);
+          $ionicPopup.alert({
+            title: 'Login failed! ',
+            template: 'Please check your credentials '
+          });
+        })
     };
 
     $scope.createAccount = function(){
@@ -181,7 +183,7 @@ angular.module('starter.controllers', [])
           'Content-Type': 'application/json',
           'Authorization': 'Token ' + $scope.token
         },
-        data: {"name": $scope.event.name , "location": $scope.event.location , "owner":"0634124986", "event_date":geteventDate()}
+        data: {"name": $scope.event.name , "location": $scope.event.location , "owner":$localStorage.get('username', ''), "event_date":geteventDate()}
       };
 
       $http(req).success(function(data, status) {
@@ -304,13 +306,13 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('ContactCtrl', function($scope, agendaService, $stateParams) {
+  .controller('ContactCtrl', function($scope, $ionicPlatform, $cordovaContacts) {
     $scope.getAllContacts = function() {
       $cordovaContacts.find().then(function(allContacts) {
         $scope.contacts = allContacts;
       });
     };
-    document.addEventListener("deviceready", function () {
+    $ionicPlatform.ready(function() {
       $scope.getAllContacts();
     }, false);
   })
