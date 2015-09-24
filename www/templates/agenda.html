@@ -1,5 +1,10 @@
-<ion-view view-title="AGENDA"  class = 'background'>
+<ion-view view-title="Agenda"  class = 'background'>
+  <ion-nav-buttons side="right" ng-show="false">
+    <button class="button button-icon button-clear ion-android-add" ng-click="addNewEvent()">
+    </button>
+  </ion-nav-buttons>
   <ion-content>
+    <ion-refresher on-refresh="getEvents()"></ion-refresher>
     <ion-list>
       <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="event in events" type="item-text-wrap" href="#/app/agenda/{{event.event_id}}">
         <div class="game">

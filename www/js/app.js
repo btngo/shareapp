@@ -5,9 +5,11 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', [
-  'restangular',
   'ionic',
-  'starter.controllers'
+  'restangular',
+  'starter.controllers',
+  'ionic-datepicker',
+  'ionic-timepicker'
 ])
   .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
@@ -69,10 +71,6 @@ angular.module('starter', [
       });
     // if none of the above states are matched, use this as the fallback
     $urlRouterProvider.otherwise('/app/agenda');
-  })
-  .config(function(RestangularProvider) {
-    RestangularProvider.setBaseUrl('http://dqlenguyen.myds.me:8000/');
-    RestangularProvider.setFullResponse(true);
   })
   .run(function($ionicPlatform) {
     $ionicPlatform.ready(function() {
