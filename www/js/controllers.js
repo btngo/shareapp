@@ -1,4 +1,4 @@
-angular.module('starter.controllers', [])
+angular.module('starter.controllers', ['starter.services'])
 
   .controller('AppCtrl', function($scope, $rootScope, $ionicModal, $http, $localStorage, $ionicPopup) {
 
@@ -174,8 +174,6 @@ angular.module('starter.controllers', [])
 
     $scope.createNewEvent = function(){
       $scope.token = $localStorage.get('token', '');
-
-      console.log($scope.eventName, $scope.eventLocation );
       var req = {
         method: 'POST',
         url: 'http://dqlenguyen.myds.me:8000/events/',
@@ -304,30 +302,84 @@ angular.module('starter.controllers', [])
   .controller('AgendaDetailCtrl', function($scope, agendaService, $stateParams) {
     $scope.event = agendaService.getEvent($stateParams.eventId);
 
-    })
+  })
 
-    .controller('ContactCtrl', function($scope, $ionicPlatform, $cordovaContacts) {
+  .controller('ContactCtrl', function($scope, $ionicPlatform, $cordovaContacts, $localStorage, $http) {
 
+    $scope.getContacts = function() {
+      $scope.token = $localStorage.get('token', '');
+      var req = {
+        method: 'GET',
+        url: 'http://dqlenguyen.myds.me:8000/persons/',
+        headers: {
+          'Authorization': 'Token ' + $scope.token
+        }
+      };
+      $http(req).success(function(data) {
+        console.log(data);
+        $scope.sharePlayContacts = data;
+        $scope.sharePlayContacts.name = 'SharePlay Contacts';
+        $scope.sharePlayContacts.forEach(function (element) {
+          element.name = element.firstname + ' ' + element.lastname;
+        });
+      }).error(function() {
+      });
+    };
+
+    $scope.toggleGroup = function(group) {
+      group.show = !group.show;
+    };
+    $scope.isGroupShown = function(group) {
+      return group.show;
+    };
+
+
+    $ionicPlatform.ready(function() {
       $scope.getAllContacts = function() {
         var options = new ContactFindOptions();
         options.multiple = true;
         options.filter = '';
+        options.fields = ['name.formatted', 'phoneNumbers'];
         if (ionic.Platform.isAndroid()) {
-          options.hasPhoneNumber = true;         //hasPhoneNumber only works for android.
-          options.fields = ['name.formatted', 'phoneNumbers'];
+          options.hasPhoneNumber = true;
         };
         $cordovaContacts.find(options).then(function(allContacts) {
-          console.log(allContacts);
-
-          $scope.contacts = allContacts.filter(function (value) {
-            return (value.phoneNumbers !== null) || (value.emails !== null);
+          var telephoneContacts = allContacts.filter(function (value) {
+            return (value.phoneNumbers !== null);
           });
+          telephoneContacts.forEach(function (element) {
+            element.name = element.name.formatted;
+            element.telephone = element.phoneNumbers[0].value;
+          });
+          $scope.telephoneContacts = telephoneContacts;
+          $scope.telephoneContacts.name = 'Telephone Contacts';
+          $localStorage.set('telephoneContacts', JSON.stringify(telephoneContacts));
         });
       };
-      $ionicPlatform.ready(function() {
+      if (1) {
         $scope.getAllContacts();
-      }, false);
-    })
+      } else {
+        $scope.telephoneContacts = JSON.parse($localStorage.get('telephoneContacts', []));
+        console.log($scope.telephoneContacts[0]);
+        $scope.telephoneContacts.name = 'Telephone Contacts';
+      }
+    }, false);
+
+    $scope.getContacts();
+    var phoneContacts = {
+      show: false,
+      name: 'Telephone Contacts',
+      contacts: $scope.telephoneContacts
+    };
+
+    var sharePlayContacts = {
+      show: false,
+      name: 'SharePlay Contacts',
+      contacts: $scope.sharePlayContacts
+    };
+
+    $scope.groups = [phoneContacts, sharePlayContacts];
+  })
 
   .controller('LocationCtrl', function($scope, locationService, $localStorage, locationFavoriteService, $http) {
     $scope.getLocations = function() {
@@ -363,74 +415,4 @@ angular.module('starter.controllers', [])
   })
 
   .controller('SettingCtrl', function($scope, $stateParams) {
-  })
-
-  .factory('locationService', function() {
-    var locations =[];
-
-    function getList(){
-      return locations;
-    }
-    function setList(locationList){
-      locations = locationList;
-    }
-    function getLocation(locationId){
-      var filteredLocation =  locations.filter(function (location) {
-        var bool = Number(location.location_id) === Number(locationId);
-        return bool;
-      });
-      return filteredLocation[0];
-    }
-    return {
-      getList: getList,
-      setList: setList,
-      getLocation: getLocation
-    }
-  })
-
-  .factory('locationFavoriteService', function() {
-    var locations =[];
-
-    function getList(){
-      return locations;
-    }
-    function setList(locationList){
-      locations = locationList;
-    }
-    function getLocation(locationId){
-      var filteredLocation =  locations.filter(function (location) {
-        var bool = Number(location.location_id) === Number(locationId);
-        return bool;
-      });
-      return filteredLocation[0];
-    }
-    return {
-      getList: getList,
-      setList: setList,
-      getLocation: getLocation
-    }
-  })
-
-  .factory('agendaService', function() {
-    var events =[];
-
-    function getList(){
-      return events;
-    }
-    function setList(eventList){
-      events = eventList;
-    }
-    function getEvent(eventId){
-      var filteredEvent =  events.filter(function (event) {
-        var bool = Number(event.event_id) === Number(eventId);
-        return bool;
-      });
-      return filteredEvent[0];
-    }
-    return {
-      getList: getList,
-      setList: setList,
-      getEvent: getEvent
-    }
   });
-
