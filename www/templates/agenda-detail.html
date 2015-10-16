@@ -3,6 +3,11 @@
     <h1> {{event.name}} </h1>
     <h1> {{event.owner.firstname}} </h1>
     <h1> {{event.event_date}} </h1>
-
+    <ion-list>
+      <ion-item class="item" ng-repeat="attendee in event.player" type="item-text-wrap" ">
+        <h2>{{attendee.email}}</h2>
+        <h2>{{attendee.telephone}}</h2>
+      </ion-item>
+    </ion-list>
   </ion-content>
 </ion-view>

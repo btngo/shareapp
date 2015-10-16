@@ -1,4 +1,10 @@
-<ion-view view-title="Contacts">
+<ion-modal-view>
+  <ion-header-bar>
+    <h1 class="title">Creat new event</h1>
+    <div class="buttons">
+      <button class="button button-clear" ng-click="closeModal()">Close</button>
+    </div>
+  </ion-header-bar>
   <ion-content>
     {{sharePlayContacts.name}}
     <ion-list can-swipe="true">
@@ -28,5 +34,6 @@
         </ion-option-button>
       </ion-item>
     </ion-list>
+    <button class="button button-block button-positive" ng-click="inviteAttendees()">Invite Attendees</button>
   </ion-content>
-</ion-view>
+</ion-modal-view>

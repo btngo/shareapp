@@ -1,4 +1,5 @@
-angular.module('starter.controllers', ['starter.services'])
+angular.module('starter.controllers', ['starter.services',
+  'ngCordova'])
 
   .controller('AppCtrl', function($scope, $rootScope, $ionicModal, $http, $localStorage, $ionicPopup) {
 
@@ -73,11 +74,53 @@ angular.module('starter.controllers', ['starter.services'])
     };
   })
 
-  .controller('AgendaCtrl',function($scope, $rootScope, $ionicModal, agendaService, locationFavoriteService, $http, $timeout, $localStorage) {
+  .controller('AgendaCtrl',function($scope, $rootScope, $ionicModal, $cordovaSms, agendaService, $cordovaContacts, locationFavoriteService, $http, $timeout, $localStorage, AttendeeService, $ionicPlatform) {
     $scope.event = {
       name: '',
       location: ''
     };
+    $scope.getContacts = function() {
+      $scope.token = $localStorage.get('token', '');
+      var req = {
+        method: 'GET',
+        url: 'http://dqlenguyen.myds.me:8000/persons/',
+        headers: {
+          'Authorization': 'Token ' + $scope.token
+        }
+      };
+      $http(req).success(function(data) {
+        console.log(data);
+        $scope.sharePlayContacts = data;
+        $scope.sharePlayContacts.name = 'SharePlay Contacts';
+        $scope.sharePlayContacts.forEach(function (element) {
+          element.name = element.firstname + ' ' + element.lastname;
+        });
+      }).error(function() {
+      });
+    };
+
+    $scope.addAttendee = function(contact) {
+      AttendeeService.addAttendee(contact);
+    };
+
+    $scope.deleteAttendee = function(contact) {
+      AttendeeService.removeAttendee(contact);
+    };
+
+    $scope.getContacts();
+    var phoneContacts = {
+      show: false,
+      name: 'Telephone Contacts',
+      contacts: $scope.telephoneContacts
+    };
+
+    var sharePlayContacts = {
+      show: false,
+      name: 'SharePlay Contacts',
+      contacts: $scope.sharePlayContacts
+    };
+
+    $scope.groups = [phoneContacts, sharePlayContacts];
     $scope.timePickerObject = {
       inputEpochTime: ((new Date()).getHours() * 60 * 60),
       step: 15,
@@ -116,6 +159,10 @@ angular.module('starter.controllers', ['starter.services'])
       }
     };
 
+    $scope.inviteAttendees = function () {
+      $scope.modal3.hide();
+    };
+
     var datePickerCallback = function (val) {
       if (typeof(val) === 'undefined') {
         console.log('No date selected');
@@ -138,6 +185,13 @@ angular.module('starter.controllers', ['starter.services'])
       $scope.modal2 = modal;
     });
 
+    $ionicModal.fromTemplateUrl('templates/addNewAttendees.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.modal3 = modal;
+    });
+
     $timeout( function() {
       if ($localStorage.get('token', '') === ''){
         $scope.modal1.show();
@@ -151,12 +205,14 @@ angular.module('starter.controllers', ['starter.services'])
     $scope.$on('Event created', function(){
       $scope.getEvents();
     });
+
     $scope.closeLogin = function() {
       $scope.modal1.hide();
     };
 
-    $scope.closeEventModal = function() {
+    $scope.closeModal = function() {
       $scope.modal2.hide();
+      $scope.modal3.hide();
     };
 
     $scope.addNewEvent = function() {
@@ -165,11 +221,51 @@ angular.module('starter.controllers', ['starter.services'])
       $scope.modal2.show();
     };
 
+    $scope.addAttendees = function() {
+      AttendeeService.cleanList();
+      $scope.modal3.show();
+    };
+
     function geteventDate () {
       var epocheTime = $scope.timePickerObject.inputEpochTime;
       $scope.datepickerObject.inputDate.setHours(parseInt(epocheTime / 3600));
       $scope.datepickerObject.inputDate.setMinutes((epocheTime / 60) % 60);
       return $scope.datepickerObject.inputDate.toJSON();
+    }
+
+    function addAttendeeToEvent(att, event) {
+      $scope.token = $localStorage.get('token', '');
+      var req = {
+        method: 'POST',
+        url: 'http://dqlenguyen.myds.me:8000/players/',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token ' + $scope.token
+        },
+        data: {"event": event.event_id, "player": att.telephone , "inviter": $localStorage.get('username', ''), "invite_reason": 'SharePlay', "confirmed": false}
+      };
+
+      $http(req).success(function(data, status) {
+        if(status === 201 ){
+          var options = {
+            replaceLineBreaks: false, // true to replace \n by a new line, false by default
+            android: {
+              intent: 'INTENT'
+            }
+          };
+          $cordovaSms
+            .send(att.telephone, 'Your are invited to a football game by ' + att.telephone + ' via SharePlay', options)
+            .then(function() {
+              console.log('Success! SMS was sent');
+            }, function(error) {
+              console.log('An error occurred when sending sms');
+            });
+          console.log('success add attendee');
+          console.log('result', data);
+        }
+      }).error(function() {
+        console.log('error invite attendee');
+      });
     }
 
     $scope.createNewEvent = function(){
@@ -186,12 +282,18 @@ angular.module('starter.controllers', ['starter.services'])
 
       $http(req).success(function(data, status) {
         if(status === 201 ){
-          $scope.closeEventModal();
+          var listAttendees = AttendeeService.getList();
+          if (listAttendees.length > 0) {
+            listAttendees.forEach(function(att) {
+              addAttendeeToEvent(att, data);
+            });
+          }
+          $scope.closeModal();
           $scope.$broadcast('Event created');
           console.log('success create events');
           console.log(' events', data);
         }
-      }).error(function(data, status, headers) {
+      }).error(function() {
         console.log('error create events');
       });
     };
@@ -244,14 +346,15 @@ angular.module('starter.controllers', ['starter.services'])
         }
       };
       $http(req).success(function(data, status, headers, config) {
+        console.log(data);
         $scope.events = data;
         agendaService.setList(data);
       }).error(function(data, status, headers, config) {
       }).finally(function() {
         $scope.$broadcast('scroll.refreshComplete');
       });
-    }
-
+    };
+    $scope.getEvents();
 
   })
 
@@ -304,7 +407,7 @@ angular.module('starter.controllers', ['starter.services'])
 
   })
 
-  .controller('ContactCtrl', function($scope, $ionicPlatform, $cordovaContacts, $localStorage, $http) {
+  .controller('ContactCtrl', function($scope, $ionicPlatform, $cordovaContacts, $localStorage, $http, AttendeeService) {
 
     $scope.getContacts = function() {
       $scope.token = $localStorage.get('token', '');
@@ -326,13 +429,13 @@ angular.module('starter.controllers', ['starter.services'])
       });
     };
 
-    $scope.toggleGroup = function(group) {
-      group.show = !group.show;
-    };
-    $scope.isGroupShown = function(group) {
-      return group.show;
+    $scope.addAttendee = function(contact) {
+      AttendeeService.addAttendee(contact);
     };
 
+    $scope.deleteAttendee = function(contact) {
+      AttendeeService.removeAttendee(contact);
+    };
 
     $ionicPlatform.ready(function() {
       $scope.getAllContacts = function() {
@@ -356,7 +459,7 @@ angular.module('starter.controllers', ['starter.services'])
           $localStorage.set('telephoneContacts', JSON.stringify(telephoneContacts));
         });
       };
-      if (1) {
+      if ($localStorage.get('telephoneContacts', []).length == 0) {
         $scope.getAllContacts();
       } else {
         $scope.telephoneContacts = JSON.parse($localStorage.get('telephoneContacts', []));

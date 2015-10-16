@@ -46,15 +46,51 @@ angular.module('starter.services', [])
     }
   })
 
+  .factory('AttendeeService', function() {
+    var attendees =[];
+
+    function addAttendee(att){
+      return attendees.push(att);
+    }
+
+    function setList(locationList){
+      attendees = locationList;
+    }
+
+    function cleanList() {
+      attendees =[];
+    }
+
+    function getList(){
+      return attendees;
+    }
+
+    function removeAttendee(att) {
+      return attendees.filter(function(contact) {
+        return att.telephone !== contact.telephone;
+      });
+    }
+
+    return {
+      addAttendee: addAttendee,
+      setList: setList,
+      getList: getList,
+      cleanList: cleanList,
+      removeAttendee: removeAttendee
+    }
+  })
+
   .factory('agendaService', function() {
     var events =[];
 
     function getList(){
       return events;
     }
+
     function setList(eventList){
       events = eventList;
     }
+
     function getEvent(eventId){
       var filteredEvent =  events.filter(function (event) {
         var bool = Number(event.event_id) === Number(eventId);
@@ -62,6 +98,7 @@ angular.module('starter.services', [])
       });
       return filteredEvent[0];
     }
+
     return {
       getList: getList,
       setList: setList,

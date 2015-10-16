@@ -2,7 +2,7 @@
   <ion-header-bar>
     <h1 class="title">Creat new event</h1>
     <div class="buttons">
-      <button class="button button-clear" ng-click="closeEventModal()">Close</button>
+      <button class="button button-clear" ng-click="closeModal()">Close</button>
     </div>
   </ion-header-bar>
   <ion-content>
@@ -29,6 +29,9 @@
         <label class="item item-input">
           <span class="input-label">Location</span>
           <input type="text" placeholder="location" ng-model="event.location">
+        </label>
+        <label class="item">
+          <button class="button icon-right ion-chevron-right button-calm" ng-click="addAttendees()">Add attendees</button>
         </label>
         <label class="item">
           <button class="button button-block button-positive" ng-click="createNewEvent()">Create new event</button>
