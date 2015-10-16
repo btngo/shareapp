@@ -50,7 +50,11 @@ angular.module('starter.services', [])
     var attendees =[];
 
     function addAttendee(att){
-      return attendees.push(att);
+      if (attendees.filter(function(contact) {
+          return att.telephone == contact.telephone;
+        }).length == 0) {
+        attendees.push(att);
+      }
     }
 
     function setList(locationList){
