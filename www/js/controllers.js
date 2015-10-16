@@ -281,7 +281,7 @@ angular.module('starter.controllers', ['starter.services',
           var options = {
             replaceLineBreaks: false, // true to replace \n by a new line, false by default
             android: {
-              intent: 'INTENT'
+              intent: ''
             }
           };
           $cordovaSms

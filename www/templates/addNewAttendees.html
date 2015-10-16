@@ -1,39 +1,35 @@
 <ion-modal-view>
-  <ion-header-bar>
-    <h1 class="title">Creat new event</h1>
-    <div class="buttons">
-      <button class="button button-clear" ng-click="closeModal()">Close</button>
-    </div>
-  </ion-header-bar>
   <ion-content>
-    {{sharePlayContacts.name}}
-    <ion-list can-swipe="true">
-      <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="contact in sharePlayContacts" type="item-text-wrap">
-        <img src="img/defaultAvatar.png">
-        <h2>{{contact.name}}</h2>
-        <h2>{{contact.telephone}}</h2>
-        <ion-option-button class="button-positive" ng-click="addAttendee(contact)">
-          Select
-        </ion-option-button>
-        <ion-option-button class="button-assertive" ng-click="deleteAttendee(contact)">
-          Delete
-        </ion-option-button>
-      </ion-item>
-    </ion-list>
-    {{telephoneContacts.name}}
-    <ion-list can-swipe="true">
-      <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="contact in telephoneContacts track by contact.name" type="item-text-wrap">
-        <img src="img/defaultAvatar.png">
-        <h2>{{contact.name}}</h2>
-        <h2>{{contact.telephone}}</h2>
-        <ion-option-button class="button-positive" ng-click="addAttendee(contact)">
-          Select
-        </ion-option-button>
-        <ion-option-button class="button-assertive" ng-click="deleteAttendee(contact)">
-          Delete
-        </ion-option-button>
-      </ion-item>
-    </ion-list>
+    <ion-scroll style="width: 100%; height: 500px">
+      {{sharePlayContacts.name}}
+      <ion-list can-swipe="true">
+        <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="contact in sharePlayContacts" type="item-text-wrap">
+          <img src="img/defaultAvatar.png">
+          <h2>{{contact.name}}</h2>
+          <h2>{{contact.telephone}}</h2>
+          <ion-option-button class="button-positive" ng-click="addAttendee(contact)">
+            Select
+          </ion-option-button>
+          <ion-option-button class="button-assertive" ng-click="deleteAttendee(contact)">
+            Delete
+          </ion-option-button>
+        </ion-item>
+      </ion-list>
+      {{telephoneContacts.name}}
+      <ion-list can-swipe="true">
+        <ion-item class="item-remove-animate item-avatar item-icon-right" ng-repeat="contact in telephoneContacts track by contact.name" type="item-text-wrap">
+          <img src="img/defaultAvatar.png">
+          <h2>{{contact.name}}</h2>
+          <h2>{{contact.telephone}}</h2>
+          <ion-option-button class="button-positive" ng-click="addAttendee(contact)">
+            Select
+          </ion-option-button>
+          <ion-option-button class="button-assertive" ng-click="deleteAttendee(contact)">
+            Delete
+          </ion-option-button>
+        </ion-item>
+      </ion-list>
+    </ion-scroll>
     <button class="button button-block button-positive" ng-click="inviteAttendees()">Invite Attendees</button>
   </ion-content>
 </ion-modal-view>
