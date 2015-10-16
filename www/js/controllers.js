@@ -192,6 +192,37 @@ angular.module('starter.controllers', ['starter.services',
       $scope.modal3 = modal;
     });
 
+    $ionicPlatform.ready(function() {
+      $scope.getAllContacts = function() {
+        var options = new ContactFindOptions();
+        options.multiple = true;
+        options.filter = '';
+        options.fields = ['name.formatted', 'phoneNumbers'];
+        if (ionic.Platform.isAndroid()) {
+          options.hasPhoneNumber = true;
+        };
+        $cordovaContacts.find(options).then(function(allContacts) {
+          var telephoneContacts = allContacts.filter(function (value) {
+            return (value.phoneNumbers !== null);
+          });
+          telephoneContacts.forEach(function (element) {
+            element.name = element.name.formatted;
+            element.telephone = element.phoneNumbers[0].value;
+          });
+          $scope.telephoneContacts = telephoneContacts;
+          $scope.telephoneContacts.name = 'Telephone Contacts';
+          $localStorage.set('telephoneContacts', JSON.stringify(telephoneContacts));
+        });
+      };
+      if ($localStorage.get('telephoneContacts', []).length == 0) {
+        $scope.getAllContacts();
+      } else {
+        $scope.telephoneContacts = JSON.parse($localStorage.get('telephoneContacts', []));
+        console.log($scope.telephoneContacts[0]);
+        $scope.telephoneContacts.name = 'Telephone Contacts';
+      }
+    }, false);
+
     $timeout( function() {
       if ($localStorage.get('token', '') === ''){
         $scope.modal1.show();
